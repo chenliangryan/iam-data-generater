@@ -3,6 +3,8 @@ package com.yugabyte.demo;
 import com.yugabyte.ysql.ClusterAwareLoadBalancer;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.sql.*;
@@ -10,6 +12,7 @@ import java.util.*;
 
 public class IAMDataGenerator
 {
+    Logger logger = LoggerFactory.getLogger(IAMDataGenerator.class);
     protected static HikariDataSource hikariDataSource;
     protected static Properties properties;
     private static HelperRandomUserProfile helperRandomUserProfile;
@@ -21,8 +24,8 @@ public class IAMDataGenerator
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         System.out.println(timestamp);
 
-        String configFile = "";
-        if (args.length >= 1) configFile = args[0];
+        String configFile = "config.properties";
+        if (! args[0].isEmpty()) configFile = args[0];
         loadConfig(configFile);
         if (properties == null) {
             System.out.println("Failed to load properties!");
@@ -59,12 +62,10 @@ public class IAMDataGenerator
     private static void loadConfig(String configFile) {
         properties = new Properties();
 
-        if (!configFile.isEmpty() && new File(configFile).exists()) {
-            try (InputStream input = new FileInputStream(configFile)) {
-                properties.load(input);
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+        try (InputStream input = new FileInputStream(configFile)) {
+            properties.load(input);
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
 
         //Overwrite configurations with environments
@@ -99,7 +100,6 @@ public class IAMDataGenerator
         if (System.getenv("IAMDG_THEADS") != null) {
             properties.setProperty("NumberOfThreads", System.getenv("IAMDG_THEADS"));
         }
-
 
         if (System.getenv("IAMDG_NO_OF_USERS") != null) {
             properties.setProperty("NumberOfUsers", System.getenv("IAMDG_NO_OF_USERS"));
